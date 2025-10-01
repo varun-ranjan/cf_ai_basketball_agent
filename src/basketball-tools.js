@@ -1,5 +1,5 @@
 // Basketball-specific tools and utilities for the NBA Agent
-import { NBAData } from './nba-api.js';
+import { NBAData } from "./nba-api.js";
 
 export class BasketballTools {
   constructor(env) {
@@ -8,14 +8,14 @@ export class BasketballTools {
   }
 
   // Player statistics and analysis tools
-  async getPlayerStats(playerName, season = "2024-25") {
+  async getPlayerStats(playerName) {
     try {
       const stats = await this.nbaData.getPlayerStats(playerName);
       if (stats && stats.name) {
         return stats;
       }
     } catch (error) {
-      console.error('Error fetching player stats:', error);
+      console.error("Error fetching player stats:", error);
     }
 
     // Simple fallback if API fails
@@ -23,7 +23,7 @@ export class BasketballTools {
       name: playerName,
       team: "Unknown",
       position: "Unknown",
-      season: season,
+      season: "2024-25",
       stats: {
         games: 0,
         points: 0,
@@ -34,8 +34,8 @@ export class BasketballTools {
         fieldGoalPercentage: 0,
         threePointPercentage: 0,
         freeThrowPercentage: 0,
-        minutes: 0
-      }
+        minutes: 0,
+      },
     };
   }
 
@@ -47,7 +47,7 @@ export class BasketballTools {
         return teamInfo;
       }
     } catch (error) {
-      console.error('Error fetching team info:', error);
+      console.error("Error fetching team info:", error);
     }
 
     // Simple fallback if API fails
@@ -57,7 +57,7 @@ export class BasketballTools {
       city: "Unknown",
       arena: "Unknown",
       founded: "Unknown",
-      championships: 0
+      championships: 0,
     };
   }
 
@@ -67,15 +67,16 @@ export class BasketballTools {
       const games = await this.nbaData.getUpcomingGames(days);
       if (games && games.length > 0) {
         if (team) {
-          return games.filter(game => 
-            game.home.toLowerCase().includes(team.toLowerCase()) ||
-            game.away.toLowerCase().includes(team.toLowerCase())
+          return games.filter(
+            (game) =>
+              game.home.toLowerCase().includes(team.toLowerCase()) ||
+              game.away.toLowerCase().includes(team.toLowerCase())
           );
         }
         return games;
       }
     } catch (error) {
-      console.error('Error fetching upcoming games:', error);
+      console.error("Error fetching upcoming games:", error);
     }
 
     // Simple fallback if API fails
@@ -87,18 +88,18 @@ export class BasketballTools {
     try {
       const standings = await this.nbaData.getCurrentStandings();
       if (standings && (standings.eastern || standings.western)) {
-        if (conference === 'eastern') return standings.eastern;
-        if (conference === 'western') return standings.western;
+        if (conference === "eastern") return standings.eastern;
+        if (conference === "western") return standings.western;
         return standings;
       }
     } catch (error) {
-      console.error('Error fetching standings:', error);
+      console.error("Error fetching standings:", error);
     }
 
     // Simple fallback if API fails
     return {
       eastern: [],
-      western: []
+      western: [],
     };
   }
 
@@ -109,17 +110,17 @@ export class BasketballTools {
       if (injuries && injuries.length > 0) {
         return {
           date: new Date().toISOString().split("T")[0],
-          injuries: injuries
+          injuries: injuries,
         };
       }
     } catch (error) {
-      console.error('Error fetching injury report:', error);
+      console.error("Error fetching injury report:", error);
     }
 
     // Simple fallback if API fails
     return {
       date: new Date().toISOString().split("T")[0],
-      injuries: []
+      injuries: [],
     };
   }
 
@@ -131,7 +132,7 @@ export class BasketballTools {
         return games;
       }
     } catch (error) {
-      console.error('Error fetching today\'s games:', error);
+      console.error("Error fetching today's games:", error);
     }
 
     // Simple fallback if API fails
@@ -146,7 +147,7 @@ export class BasketballTools {
         return news;
       }
     } catch (error) {
-      console.error('Error fetching NBA news:', error);
+      console.error("Error fetching NBA news:", error);
     }
 
     // Simple fallback if API fails
@@ -158,34 +159,15 @@ export class BasketballTools {
     try {
       const games = await this.nbaData.getTodaysGames();
       if (games && games.length > 0) {
-        return games.filter(game => game.status === 'in-progress' || game.status === 'final');
+        return games.filter(
+          (game) => game.status === "in-progress" || game.status === "final"
+        );
       }
     } catch (error) {
-      console.error('Error fetching live scores:', error);
+      console.error("Error fetching live scores:", error);
     }
 
     // Simple fallback if API fails
     return [];
-  }
-
-  // Player comparison (simplified)
-  async comparePlayers(player1, player2) {
-    const stats1 = await this.getPlayerStats(player1);
-    const stats2 = await this.getPlayerStats(player2);
-    
-    if (!stats1 || !stats2) {
-      return null;
-    }
-
-    return {
-      player1: stats1,
-      player2: stats2,
-      comparison: {
-        points: { player1: stats1.stats.points, player2: stats2.stats.points },
-        rebounds: { player1: stats1.stats.rebounds, player2: stats2.stats.rebounds },
-        assists: { player1: stats1.stats.assists, player2: stats2.stats.assists },
-        fieldGoalPercentage: { player1: stats1.stats.fieldGoalPercentage, player2: stats2.stats.fieldGoalPercentage }
-      }
-    };
   }
 }

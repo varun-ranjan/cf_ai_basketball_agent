@@ -11,42 +11,51 @@ export class NBAData {
   // Get current NBA standings from ESPN API
   async getCurrentStandings() {
     try {
-      const cacheKey = 'standings';
+      const cacheKey = "standings";
       const cached = this.getCachedData(cacheKey);
       if (cached) return cached;
 
-      const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/standings', {
-        headers: {
-          'User-Agent': 'NBA-Agent/1.0',
-          'Accept': 'application/json'
+      const response = await fetch(
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/standings",
+        {
+          headers: {
+            "User-Agent": "NBA-Agent/1.0",
+            Accept: "application/json",
+          },
         }
-      });
-      
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      
+
       const standings = {
-        eastern: data.children[0].standings.entries.map(team => ({
-          rank: team.stats.find(s => s.type === 'rank')?.value || 0,
+        eastern: data.children[0].standings.entries.map((team) => ({
+          rank: team.stats.find((s) => s.type === "rank")?.value || 0,
           team: team.team.displayName,
-          record: `${team.stats.find(s => s.type === 'wins')?.value}-${team.stats.find(s => s.type === 'losses')?.value}`,
-          gamesBehind: team.stats.find(s => s.type === 'gamesBehind')?.value || 0
+          record: `${team.stats.find((s) => s.type === "wins")?.value}-${
+            team.stats.find((s) => s.type === "losses")?.value
+          }`,
+          gamesBehind:
+            team.stats.find((s) => s.type === "gamesBehind")?.value || 0,
         })),
-        western: data.children[1].standings.entries.map(team => ({
-          rank: team.stats.find(s => s.type === 'rank')?.value || 0,
+        western: data.children[1].standings.entries.map((team) => ({
+          rank: team.stats.find((s) => s.type === "rank")?.value || 0,
           team: team.team.displayName,
-          record: `${team.stats.find(s => s.type === 'wins')?.value}-${team.stats.find(s => s.type === 'losses')?.value}`,
-          gamesBehind: team.stats.find(s => s.type === 'gamesBehind')?.value || 0
-        }))
+          record: `${team.stats.find((s) => s.type === "wins")?.value}-${
+            team.stats.find((s) => s.type === "losses")?.value
+          }`,
+          gamesBehind:
+            team.stats.find((s) => s.type === "gamesBehind")?.value || 0,
+        })),
       };
 
       this.setCachedData(cacheKey, standings);
       return standings;
     } catch (error) {
-      console.error('Error fetching standings:', error);
+      console.error("Error fetching standings:", error);
       return this.getFallbackStandings();
     }
   }
@@ -54,38 +63,49 @@ export class NBAData {
   // Get current NBA games (today's games)
   async getTodaysGames() {
     try {
-      const cacheKey = 'todays-games';
+      const cacheKey = "todays-games";
       const cached = this.getCachedData(cacheKey);
       if (cached) return cached;
 
-      const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard`, {
-        headers: {
-          'User-Agent': 'NBA-Agent/1.0',
-          'Accept': 'application/json'
+      const response = await fetch(
+        `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard`,
+        {
+          headers: {
+            "User-Agent": "NBA-Agent/1.0",
+            Accept: "application/json",
+          },
         }
-      });
-      
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      
-      const games = data.events.map(game => ({
+
+      const games = data.events.map((game) => ({
         id: game.id,
-        home: game.competitions[0].competitors.find(c => c.homeAway === 'home').team.displayName,
-        away: game.competitions[0].competitors.find(c => c.homeAway === 'away').team.displayName,
+        home: game.competitions[0].competitors.find(
+          (c) => c.homeAway === "home"
+        ).team.displayName,
+        away: game.competitions[0].competitors.find(
+          (c) => c.homeAway === "away"
+        ).team.displayName,
         date: game.date,
         status: game.status.type.name,
-        homeScore: game.competitions[0].competitors.find(c => c.homeAway === 'home').score,
-        awayScore: game.competitions[0].competitors.find(c => c.homeAway === 'away').score,
-        venue: game.competitions[0].venue?.fullName || 'TBD'
+        homeScore: game.competitions[0].competitors.find(
+          (c) => c.homeAway === "home"
+        ).score,
+        awayScore: game.competitions[0].competitors.find(
+          (c) => c.homeAway === "away"
+        ).score,
+        venue: game.competitions[0].venue?.fullName || "TBD",
       }));
 
       this.setCachedData(cacheKey, games);
       return games;
     } catch (error) {
-      console.error('Error fetching today\'s games:', error);
+      console.error("Error fetching today's games:", error);
       return this.getFallbackGames();
     }
   }
@@ -97,30 +117,38 @@ export class NBAData {
       const cached = this.getCachedData(cacheKey);
       if (cached) return cached;
 
-      const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard`);
+      const response = await fetch(
+        `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard`
+      );
       const data = await response.json();
-      
+
       const upcomingGames = data.events
-        .filter(game => {
+        .filter((game) => {
           const gameDate = new Date(game.date);
           const now = new Date();
-          const futureDate = new Date(now.getTime() + (days * 24 * 60 * 60 * 1000));
+          const futureDate = new Date(
+            now.getTime() + days * 24 * 60 * 60 * 1000
+          );
           return gameDate > now && gameDate <= futureDate;
         })
-        .map(game => ({
+        .map((game) => ({
           id: game.id,
-          home: game.competitions[0].competitors.find(c => c.homeAway === 'home').team.displayName,
-          away: game.competitions[0].competitors.find(c => c.homeAway === 'away').team.displayName,
+          home: game.competitions[0].competitors.find(
+            (c) => c.homeAway === "home"
+          ).team.displayName,
+          away: game.competitions[0].competitors.find(
+            (c) => c.homeAway === "away"
+          ).team.displayName,
           date: game.date,
           time: new Date(game.date).toLocaleTimeString(),
-          venue: game.competitions[0].venue?.fullName || 'TBD',
-          status: 'scheduled'
+          venue: game.competitions[0].venue?.fullName || "TBD",
+          status: "scheduled",
         }));
 
       this.setCachedData(cacheKey, upcomingGames);
       return upcomingGames;
     } catch (error) {
-      console.error('Error fetching upcoming games:', error);
+      console.error("Error fetching upcoming games:", error);
       return this.getFallbackUpcomingGames();
     }
   }
@@ -133,16 +161,20 @@ export class NBAData {
       if (cached) return cached;
 
       // Use NBA API to get player data
-      const response = await fetch(`https://stats.nba.com/stats/playerprofilev2?PlayerID=${await this.getPlayerId(playerName)}`);
+      const response = await fetch(
+        `https://stats.nba.com/stats/playerprofilev2?PlayerID=${await this.getPlayerId(
+          playerName
+        )}`
+      );
       const data = await response.json();
-      
+
       if (data.resultSets && data.resultSets[0].rowSet.length > 0) {
         const playerData = data.resultSets[0].rowSet[0];
         const stats = {
           name: playerData[3], // Player name
           team: playerData[4], // Team
           position: playerData[5], // Position
-          season: '2024-25',
+          season: "2024-25",
           stats: {
             games: playerData[6] || 0,
             points: playerData[7] || 0,
@@ -153,15 +185,15 @@ export class NBAData {
             fieldGoalPercentage: playerData[12] || 0,
             threePointPercentage: playerData[13] || 0,
             freeThrowPercentage: playerData[14] || 0,
-            minutes: playerData[15] || 0
-          }
+            minutes: playerData[15] || 0,
+          },
         };
 
         this.setCachedData(cacheKey, stats);
         return stats;
       }
     } catch (error) {
-      console.error('Error fetching player stats:', error);
+      console.error("Error fetching player stats:", error);
       return this.getFallbackPlayerStats(playerName);
     }
   }
@@ -173,10 +205,12 @@ export class NBAData {
       const cached = this.getCachedData(cacheKey);
       if (cached) return cached;
 
-      const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams');
+      const response = await fetch(
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams"
+      );
       const data = await response.json();
-      
-      const team = data.sports[0].leagues[0].teams.find(t => 
+
+      const team = data.sports[0].leagues[0].teams.find((t) =>
         t.team.displayName.toLowerCase().includes(teamName.toLowerCase())
       );
 
@@ -185,16 +219,16 @@ export class NBAData {
           name: team.team.displayName,
           abbreviation: team.team.abbreviation,
           city: team.team.location,
-          arena: team.team.venue?.fullName || 'TBD',
-          founded: team.team.founded || 'Unknown',
-          championships: team.team.championships?.length || 0
+          arena: team.team.venue?.fullName || "TBD",
+          founded: team.team.founded || "Unknown",
+          championships: team.team.championships?.length || 0,
         };
 
         this.setCachedData(cacheKey, teamInfo);
         return teamInfo;
       }
     } catch (error) {
-      console.error('Error fetching team info:', error);
+      console.error("Error fetching team info:", error);
       return this.getFallbackTeamInfo(teamName);
     }
   }
@@ -202,25 +236,28 @@ export class NBAData {
   // Get injury report
   async getInjuryReport() {
     try {
-      const cacheKey = 'injury-report';
+      const cacheKey = "injury-report";
       const cached = this.getCachedData(cacheKey);
       if (cached) return cached;
 
-      const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries');
+      const response = await fetch(
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/injuries"
+      );
       const data = await response.json();
-      
-      const injuries = data.injuries?.map(injury => ({
-        player: injury.athlete?.displayName || 'Unknown',
-        team: injury.team?.displayName || 'Unknown',
-        injury: injury.injury || 'Unknown',
-        status: injury.status || 'Unknown',
-        expectedReturn: injury.expectedReturn || 'TBD'
-      })) || [];
+
+      const injuries =
+        data.injuries?.map((injury) => ({
+          player: injury.athlete?.displayName || "Unknown",
+          team: injury.team?.displayName || "Unknown",
+          injury: injury.injury || "Unknown",
+          status: injury.status || "Unknown",
+          expectedReturn: injury.expectedReturn || "TBD",
+        })) || [];
 
       this.setCachedData(cacheKey, injuries);
       return injuries;
     } catch (error) {
-      console.error('Error fetching injury report:', error);
+      console.error("Error fetching injury report:", error);
       return this.getFallbackInjuries();
     }
   }
@@ -228,25 +265,27 @@ export class NBAData {
   // Get NBA news and trade rumors
   async getNBANews() {
     try {
-      const cacheKey = 'nba-news';
+      const cacheKey = "nba-news";
       const cached = this.getCachedData(cacheKey);
       if (cached) return cached;
 
-      const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news');
+      const response = await fetch(
+        "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news"
+      );
       const data = await response.json();
-      
-      const news = data.articles.slice(0, 10).map(article => ({
+
+      const news = data.articles.slice(0, 10).map((article) => ({
         title: article.headline,
         summary: article.description,
         url: article.links.web.href,
         published: article.published,
-        source: 'ESPN'
+        source: "ESPN",
       }));
 
       this.setCachedData(cacheKey, news);
       return news;
     } catch (error) {
-      console.error('Error fetching NBA news:', error);
+      console.error("Error fetching NBA news:", error);
       return this.getFallbackNews();
     }
   }
@@ -263,7 +302,7 @@ export class NBAData {
   setCachedData(key, data) {
     this.cache.set(key, {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -273,13 +312,23 @@ export class NBAData {
       eastern: [
         { rank: 1, team: "Boston Celtics", record: "64-18", gamesBehind: 0 },
         { rank: 2, team: "New York Knicks", record: "50-32", gamesBehind: 14 },
-        { rank: 3, team: "Milwaukee Bucks", record: "49-33", gamesBehind: 15 }
+        { rank: 3, team: "Milwaukee Bucks", record: "49-33", gamesBehind: 15 },
       ],
       western: [
-        { rank: 1, team: "Oklahoma City Thunder", record: "57-25", gamesBehind: 0 },
+        {
+          rank: 1,
+          team: "Oklahoma City Thunder",
+          record: "57-25",
+          gamesBehind: 0,
+        },
         { rank: 2, team: "Denver Nuggets", record: "57-25", gamesBehind: 0 },
-        { rank: 3, team: "Minnesota Timberwolves", record: "56-26", gamesBehind: 1 }
-      ]
+        {
+          rank: 3,
+          team: "Minnesota Timberwolves",
+          record: "56-26",
+          gamesBehind: 1,
+        },
+      ],
     };
   }
 
@@ -290,22 +339,17 @@ export class NBAData {
         away: "Golden State Warriors",
         date: new Date().toISOString(),
         status: "scheduled",
-        venue: "Crypto.com Arena"
-      }
+        venue: "Crypto.com Arena",
+      },
     ];
   }
 
   getFallbackUpcomingGames() {
-    return [
-      {
-        home: "Los Angeles Lakers",
-        away: "Golden State Warriors",
-        date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        time: "8:00 PM PST",
-        venue: "Crypto.com Arena",
-        status: "scheduled"
-      }
-    ];
+    return this.getFallbackGames().map((game) => ({
+      ...game,
+      date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      time: "8:00 PM PST",
+    }));
   }
 
   getFallbackPlayerStats(playerName) {
@@ -315,16 +359,28 @@ export class NBAData {
       position: "Unknown",
       season: "2024-25",
       stats: {
-        games: 0, points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0,
-        fieldGoalPercentage: 0, threePointPercentage: 0, freeThrowPercentage: 0, minutes: 0
-      }
+        games: 0,
+        points: 0,
+        rebounds: 0,
+        assists: 0,
+        steals: 0,
+        blocks: 0,
+        fieldGoalPercentage: 0,
+        threePointPercentage: 0,
+        freeThrowPercentage: 0,
+        minutes: 0,
+      },
     };
   }
 
   getFallbackTeamInfo(teamName) {
     return {
-      name: teamName, abbreviation: "UNK", city: "Unknown", arena: "Unknown",
-      founded: "Unknown", championships: 0
+      name: teamName,
+      abbreviation: "UNK",
+      city: "Unknown",
+      arena: "Unknown",
+      founded: "Unknown",
+      championships: 0,
     };
   }
 
@@ -341,12 +397,12 @@ export class NBAData {
     // This would typically involve a player search API
     // For now, return a mock ID
     const playerMap = {
-      'lebron james': '2544',
-      'stephen curry': '201939',
-      'giannis antetokounmpo': '203507',
-      'luka doncic': '1629029',
-      'jayson tatum': '1628369'
+      "lebron james": "2544",
+      "stephen curry": "201939",
+      "giannis antetokounmpo": "203507",
+      "luka doncic": "1629029",
+      "jayson tatum": "1628369",
     };
-    return playerMap[playerName.toLowerCase()] || '0';
+    return playerMap[playerName.toLowerCase()] || "0";
   }
 }

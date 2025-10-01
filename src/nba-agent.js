@@ -45,54 +45,68 @@ export class NBAAgent {
     try {
       console.log("Processing message:", message);
       
-      // Simple response without complex AI processing for now
-      const lowerMessage = message.toLowerCase();
+      // Update analytics
+      await this.updateAnalytics();
       
-      if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
-        return {
-          type: "response",
-          content: "Hello! I'm your NBA agent. I can help you with basketball questions, player stats, team information, and game schedules. What would you like to know?",
-          timestamp: new Date().toISOString()
-        };
-      }
+      // Get current state for conversation history
+      const currentState = await this.getState();
+      const conversationHistory = currentState.conversationHistory || [];
       
-      if (lowerMessage.includes("player") || lowerMessage.includes("stats")) {
-        return {
-          type: "response",
-          content: "I can help with NBA player information! Some notable players include LeBron James (Lakers), Stephen Curry (Warriors), Giannis Antetokounmpo (Bucks), Luka Doncic (Mavericks), and Jayson Tatum (Celtics). What specific player would you like to know about?",
-          timestamp: new Date().toISOString()
-        };
-      }
+      // Add user message to conversation history
+      conversationHistory.push({
+        role: "user",
+        content: message,
+        timestamp: new Date().toISOString()
+      });
       
-      if (lowerMessage.includes("team") || lowerMessage.includes("standing")) {
-        return {
-          type: "response",
-          content: "I can discuss NBA teams and standings! The league has 30 teams split between Eastern and Western Conferences. Some top teams include the Boston Celtics, Denver Nuggets, Oklahoma City Thunder, and Minnesota Timberwolves. Which team interests you?",
-          timestamp: new Date().toISOString()
-        };
-      }
+      // Analyze user intent
+      const intent = this.analyzeIntent(message);
+      console.log("Detected intent:", intent);
       
-      if (lowerMessage.includes("game") || lowerMessage.includes("schedule")) {
-        return {
-          type: "response",
-          content: "I can help with NBA games and schedules! The NBA season typically runs from October to June, with playoffs in the spring. Games are played throughout the week, with most action on Tuesdays, Thursdays, and weekends. What games are you interested in?",
-          timestamp: new Date().toISOString()
-        };
-      }
+      // Get relevant context data based on intent
+      const contextData = await this.getContextData(message, intent);
+      console.log("Context data:", contextData);
       
-      // Default response
+      // Generate AI response using Llama 3.3
+      const aiResponse = await this.generateResponse(message, contextData, conversationHistory);
+      
+      // Add agent response to conversation history
+      conversationHistory.push({
+        role: "assistant",
+        content: aiResponse,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Update state with new conversation history
+      await this.setState({
+        ...currentState,
+        conversationHistory: conversationHistory.slice(-50) // Keep last 50 messages
+      });
+      
       return {
         type: "response",
-        content: "I'm your NBA agent! I can help you with basketball questions, player statistics, team information, game schedules, and more. What would you like to know about the NBA?",
+        content: aiResponse,
         timestamp: new Date().toISOString()
       };
 
     } catch (error) {
       console.error("Error processing message:", error);
       
+      // Fallback response with helpful context
+      const lowerMessage = message.toLowerCase();
+      let fallbackResponse = "I'm here to help with NBA questions! I can discuss players, teams, games, and basketball in general. What would you like to know?";
+      
+      if (lowerMessage.includes("player") || lowerMessage.includes("stats")) {
+        fallbackResponse = "I'd love to help with player statistics! While I'm having trouble accessing live data right now, I can tell you about NBA players in general. Try asking about specific players like LeBron James, Stephen Curry, or Giannis Antetokounmpo.";
+      } else if (lowerMessage.includes("game") || lowerMessage.includes("schedule")) {
+        fallbackResponse = "I can help with game information! While I'm having trouble accessing live schedules right now, I can discuss NBA games and matchups in general. What specific games or teams are you interested in?";
+      } else if (lowerMessage.includes("team") || lowerMessage.includes("standing")) {
+        fallbackResponse = "I'd be happy to discuss NBA teams and standings! While I'm having trouble accessing live data right now, I can talk about teams, their performance, and league standings in general.";
+      }
+      
       return {
         type: "response",
-        content: "I'm here to help with NBA questions! I can discuss players, teams, games, and basketball in general. What would you like to know?",
+        content: fallbackResponse,
         timestamp: new Date().toISOString()
       };
     }
@@ -123,37 +137,62 @@ export class NBAAgent {
 
   async getContextData(message, intent) {
     try {
+      const contextData = {
+        timestamp: new Date().toISOString(),
+        intent: intent,
+        data: {}
+      };
+
       // Get relevant data based on intent
       if (intent.includes("player")) {
         const playerName = this.extractPlayerName(message);
         if (playerName) {
-          return await this.basketballTools.getPlayerStats(playerName);
+          contextData.data.playerStats = await this.basketballTools.getPlayerStats(playerName);
+        } else {
+          // If no specific player mentioned, get general player info
+          contextData.data.generalPlayers = {
+            message: "Popular NBA players include LeBron James, Stephen Curry, Giannis Antetokounmpo, Luka Doncic, and Jayson Tatum"
+          };
         }
       }
       
       if (intent.includes("team")) {
-        return await this.basketballTools.getStandings();
+        contextData.data.standings = await this.basketballTools.getStandings();
+        contextData.data.todaysGames = await this.basketballTools.getTodaysGames();
       }
       
       if (intent.includes("game")) {
-        return await this.basketballTools.getTodaysGames();
+        contextData.data.todaysGames = await this.basketballTools.getTodaysGames();
+        contextData.data.upcomingGames = await this.basketballTools.getUpcomingGames();
+        contextData.data.liveScores = await this.basketballTools.getLiveScores();
       }
       
       if (intent.includes("injury")) {
-        return await this.basketballTools.getInjuryReport();
+        contextData.data.injuryReport = await this.basketballTools.getInjuryReport();
       }
       
       if (intent.includes("news")) {
-        return await this.basketballTools.getNBANews();
+        contextData.data.news = await this.basketballTools.getNBANews();
       }
 
-      return null;
+      // Always include current standings and today's games for general context
+      if (!contextData.data.standings) {
+        contextData.data.standings = await this.basketballTools.getStandings();
+      }
+      if (!contextData.data.todaysGames) {
+        contextData.data.todaysGames = await this.basketballTools.getTodaysGames();
+      }
+
+      return contextData;
     } catch (error) {
       console.error("Error getting context data:", error);
       // Return a simple context object to help the AI provide a response
       return {
+        timestamp: new Date().toISOString(),
+        intent: intent,
         error: "API unavailable",
-        message: "I'm having trouble accessing live NBA data, but I can still help with general basketball knowledge."
+        message: "I'm having trouble accessing live NBA data, but I can still help with general basketball knowledge.",
+        data: {}
       };
     }
   }
@@ -189,18 +228,59 @@ export class NBAAgent {
       const userPreferences = currentState.userPreferences || {};
       const analytics = currentState.analytics || {};
 
+      // Format context data for better AI understanding
+      let contextSummary = "No specific data available";
+      if (contextData && contextData.data) {
+        const data = contextData.data;
+        const summaries = [];
+        
+        if (data.playerStats) {
+          summaries.push(`Player Stats: ${data.playerStats.name} (${data.playerStats.team}) - ${data.playerStats.stats.points} PPG, ${data.playerStats.stats.rebounds} RPG, ${data.playerStats.stats.assists} APG`);
+        }
+        
+        if (data.standings && (data.standings.eastern || data.standings.western)) {
+          const topTeams = [];
+          if (data.standings.eastern && data.standings.eastern.length > 0) {
+            topTeams.push(`Eastern: ${data.standings.eastern[0].team} (${data.standings.eastern[0].record})`);
+          }
+          if (data.standings.western && data.standings.western.length > 0) {
+            topTeams.push(`Western: ${data.standings.western[0].team} (${data.standings.western[0].record})`);
+          }
+          if (topTeams.length > 0) {
+            summaries.push(`Current Standings: ${topTeams.join(', ')}`);
+          }
+        }
+        
+        if (data.todaysGames && data.todaysGames.length > 0) {
+          const games = data.todaysGames.slice(0, 3).map(game => `${game.away} @ ${game.home} (${game.status})`).join(', ');
+          summaries.push(`Today's Games: ${games}`);
+        }
+        
+        if (data.injuryReport && data.injuryReport.injuries && data.injuryReport.injuries.length > 0) {
+          const injuries = data.injuryReport.injuries.slice(0, 3).map(injury => `${injury.player} (${injury.team}) - ${injury.injury}`).join(', ');
+          summaries.push(`Recent Injuries: ${injuries}`);
+        }
+        
+        if (data.news && data.news.length > 0) {
+          const news = data.news.slice(0, 2).map(article => article.title).join(', ');
+          summaries.push(`Latest News: ${news}`);
+        }
+        
+        contextSummary = summaries.length > 0 ? summaries.join(' | ') : "General NBA information available";
+      }
+
       // Create enhanced prompt for Llama 3.3
       const prompt = `You are an expert NBA analyst and assistant. You have been helping users with ${analytics.totalQueries || 0} queries so far.
 
 User Preferences: ${JSON.stringify(userPreferences)}
-Context Data: ${contextData ? JSON.stringify(contextData) : 'No specific data available'}
+Current NBA Data: ${contextSummary}
 
 Recent Conversation:
 ${conversationContext}
 
 User Question: ${userMessage}
 
-Please provide a helpful, accurate, and engaging response about NBA basketball. Use the context data to provide specific insights. If you don't have specific data for the question, provide general basketball knowledge or suggest what information would be helpful. Keep responses conversational, informative, and personalized based on user preferences.`;
+Please provide a helpful, accurate, and engaging response about NBA basketball. Use the current NBA data to provide specific insights and up-to-date information. If you have live data, reference it directly. If you don't have specific data for the question, provide general basketball knowledge or suggest what information would be helpful. Keep responses conversational, informative, and personalized based on user preferences.`;
 
       // Call Llama 3.3 via Workers AI
       const response = await this.env.AI.run(
@@ -209,14 +289,14 @@ Please provide a helpful, accurate, and engaging response about NBA basketball. 
           messages: [
             {
               role: "system",
-              content: "You are an expert NBA analyst assistant with deep knowledge of basketball statistics, player performance, team dynamics, and league trends. Provide accurate, helpful information about NBA basketball, players, teams, and games. Use data-driven insights and maintain an engaging, conversational tone."
+              content: "You are an expert NBA analyst assistant with deep knowledge of basketball statistics, player performance, team dynamics, and league trends. Provide accurate, helpful information about NBA basketball, players, teams, and games. Use data-driven insights and maintain an engaging, conversational tone. Always reference specific data when available."
             },
             {
               role: "user",
               content: prompt
             }
           ],
-          max_tokens: 750,
+          max_tokens: 1000,
           temperature: 0.7,
           top_p: 0.9,
           frequency_penalty: 0.1,

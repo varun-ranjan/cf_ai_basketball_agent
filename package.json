@@ -6,10 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "start": "wrangler dev",
-    "format": "prettier --write .",
-    "check": "prettier . --check"
+    "deploy": "wrangler deploy"
   },
   "keywords": [
     "cloudflare",
@@ -20,11 +17,8 @@
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "agents": "^0.1.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "wrangler": "^4.40.2",
-    "prettier": "^3.6.2"
+    "wrangler": "^4.40.2"
   }
 }
