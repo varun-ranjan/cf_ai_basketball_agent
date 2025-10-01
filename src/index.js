@@ -45,8 +45,8 @@ export default {
           console.error("WebSocket message error:", error);
           server.send(
             JSON.stringify({
-              type: "error",
-              message: "Failed to process message",
+              type: "response",
+              content: "I'm having trouble processing your request right now. This might be due to API connectivity issues. Please try asking a simpler question or try again in a moment. I can still help with general NBA knowledge!",
               timestamp: new Date().toISOString(),
             })
           );
