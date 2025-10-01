@@ -1,0 +1,30 @@
+{
+  "name": "nba-agent",
+  "version": "1.0.0",
+  "description": "AI-powered NBA basketball assistant built with Cloudflare Agents",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "start": "wrangler dev",
+    "format": "prettier --write .",
+    "check": "prettier . --check"
+  },
+  "keywords": [
+    "cloudflare",
+    "ai",
+    "agents",
+    "nba",
+    "basketball"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "agents": "^0.1.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.40.2",
+    "prettier": "^3.6.2"
+  }
+}
