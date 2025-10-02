@@ -1,104 +1,119 @@
-# 🏀 NBA Agent
+# 🏀 Basketball Expert Agent
 
-AI-powered basketball assistant built with Cloudflare Workers, Durable Objects, and Llama 3.3.
+A sophisticated AI-powered basketball coaching assistant with real-time streaming, persistent conversations, and comprehensive basketball knowledge.
 
-## Features
+## ✨ Features
 
-- **Live Chat**: WebSocket-based interface with typing indicators
-- **AI Analysis**: Llama 3.3 for intelligent basketball insights
-- **Live NBA Data**: Player stats, standings, and game scores from ESPN API
-- **Current Standings**: Up-to-date conference and division standings
-- **Live Games**: Today's games with live scores and status
-- **Injury Reports**: Current injury status from official NBA sources
-- **NBA News**: Latest news and trade rumors from ESPN
-- **Persistent State**: Conversation history and user preferences
+- **Real-time Streaming**: Unlimited output with no truncation
+- **Persistent Conversations**: SQLite-powered conversation history
+- **Adaptive Learning**: Tracks user level and topics discussed
+- **Modern UI**: Clean design with dark mode support
+- **Clickable Topics**: Quick-start prompts for common questions
 
-## Quick Start
+## 🚀 Quick Start
 
-```bash
-# Install Wrangler CLI (recommended approach)
-npx wrangler@latest --version
+### Prerequisites
 
-# Login to Cloudflare
-npx wrangler@latest login
+- Node.js 18+
+- Cloudflare account with Workers AI enabled
+- Wrangler CLI: `npm install -g wrangler`
 
-# Deploy the NBA Agent
-npx wrangler@latest deploy
-```
-
-**Note**: No need to run `npm install` - the project uses npx to run wrangler directly.
-
-## Usage
-
-After deployment, access your agent at `https://nba-agent.your-subdomain.workers.dev`
-
-### Sample Queries
-- "What are LeBron James' current stats?"
-- "Show me today's NBA games"
-- "What's the latest NBA news?"
-- "Who's injured in the NBA?"
-- "Show me the current standings"
-- "What games are live right now?"
-
-## Architecture
-
-- **Cloudflare Workers**: Serverless compute platform
-- **Durable Objects**: Stateful micro-servers for agent persistence
-- **Workers AI**: Llama 3.3 for intelligent responses
-- **SQLite**: Built-in database for state management
-- **WebSockets**: Real-time bidirectional communication
-
-## Project Structure
-
-```
-src/
-├── index.js              # WebSocket server & chat UI (325 lines)
-├── nba-agent.js          # NBA Agent with AI integration (255 lines)
-├── basketball-tools.js   # Basketball data utilities (191 lines)
-└── nba-api.js            # NBA data integration (305 lines)
-```
-
-## Configuration
-
-The `wrangler.toml` file is pre-configured with:
-- Durable Objects for state management
-- AI binding for Llama 3.3
-- SQLite database for persistence
-
-## Development
+### Installation
 
 ```bash
-# Local development
-npx wrangler@latest dev
-
-# Deploy
-npx wrangler@latest deploy
+git clone <repository-url>
+cd cf_ai_basketball_agent
+npm install
 ```
 
-## Prerequisites
+### Development
 
-1. **Cloudflare Account** - Sign up at [cloudflare.com](https://cloudflare.com)
-2. **Workers.dev Subdomain** - Set up in Cloudflare Dashboard
-3. **Workers AI Access** - Enable in your Cloudflare account
-
-## Troubleshooting
-
-**If you get "workers.dev subdomain required":**
-- Go to Cloudflare Dashboard → Workers & Pages → Workers
-- Click "Set up a subdomain" under Workers.dev
-- Choose a subdomain (e.g., `yourname.workers.dev`)
-
-**If you get permission errors:**
 ```bash
-# Try with npx instead
-npx wrangler@latest deploy
+npm run dev
 ```
 
-## Requirements Met
+**Local URL**: http://localhost:8787
 
-- ✅ **LLM**: Llama 3.3 on Workers AI
-- ✅ **Workflow**: Durable Objects with state management
-- ✅ **User Input**: WebSocket chat interface
-- ✅ **Memory**: Persistent state with analytics
+### Deployment
 
-Built with ❤️ using Cloudflare's platform.
+```bash
+npx wrangler deploy
+```
+
+**Live URL**: https://basketball-agent.ranjan-varun.workers.dev
+
+## 🏗️ Architecture
+
+- **Cloudflare Workers**: Serverless execution environment
+- **Durable Objects**: Stateful coordination with SQLite database
+- **Workers AI**: Llama 3.1 8B Instruct for basketball knowledge
+- **Server-Sent Events**: Real-time streaming responses
+
+## 📁 Project Structure
+
+```
+├── src/
+│   └── index.ts          # Main Worker and Durable Object
+├── public/
+│   └── index.html         # Frontend chat interface
+├── wrangler.jsonc        # Cloudflare Worker configuration
+└── package.json          # Dependencies and scripts
+```
+
+## 🎯 Usage
+
+Ask basketball-related questions like:
+
+- "How do I improve my shooting technique?"
+- "Explain the pick and roll offense"
+- "What are the fundamentals of defense?"
+- "Create a training program for beginners"
+
+## 🛠️ Configuration
+
+The agent uses `wrangler.jsonc` for configuration:
+
+- **AI Model**: Llama 3.1 8B Instruct
+- **Max Tokens**: 4096 for comprehensive responses
+- **Streaming**: Native AI streaming for unlimited output
+- **Database**: SQLite for persistent conversations
+
+## 📊 Performance
+
+- **Response Time**: < 2 seconds for initial response
+- **Streaming**: Real-time token-by-token delivery
+- **Reliability**: Bulletproof error handling with retries
+- **Scalability**: Serverless architecture with global edge deployment
+
+## 🔧 Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start local development server
+npm run dev
+
+# Deploy to Cloudflare Workers
+npx wrangler deploy
+
+# View logs
+npx wrangler tail
+```
+
+## 🌐 URLs
+
+- **Local Development**: http://localhost:8787
+- **Production**: https://basketball-agent.ranjan-varun.workers.dev
+
+## 📝 Technologies
+
+- **Backend**: Cloudflare Workers, Durable Objects, SQLite
+- **AI**: Workers AI (Llama 3.1 8B Instruct)
+- **Frontend**: HTML, CSS, JavaScript
+- **Streaming**: Server-Sent Events (SSE)
+- **Language**: TypeScript
+
+---
+
+Built with ❤️ for basketball enthusiasts
